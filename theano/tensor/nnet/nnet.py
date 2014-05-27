@@ -1973,8 +1973,6 @@ opt.register_specialize(local_log_softmax, name='local_log_softmax')
 
 
 
-
-
 class GroupDot(theano.gof.Op):
     def __init__(self, n_groups):
         """
@@ -2142,5 +2140,4 @@ class GroupDotGrad(theano.gof.Op):
                 _outs[0][0][mask] = gh
                 _outs[1][0][pos] += gW
                 _outs[2][0][pos] += gb
-
 

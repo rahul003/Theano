@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import numpy
 import theano
 
@@ -6,6 +7,12 @@ from theano.tensor import as_tensor_variable
 from theano.compat.six import StringIO
 
 from theano.sandbox.cuda import GpuOp, CudaNdarray, as_cuda_ndarray_variable
+=======
+from theano import Op, Apply
+from theano.compat.six import StringIO
+
+from theano.sandbox.cuda import GpuOp
+>>>>>>> 8477307a8cdff035fc8a69b2c3e23f895478a12e
 
 from theano.sandbox.cuda.kernel_codegen import (nvcc_kernel,
                                                 inline_softmax,
@@ -715,6 +722,7 @@ class GpuSoftmaxWithBias (GpuOp):
 gpu_softmax_with_bias = GpuSoftmaxWithBias()
 
 
+
 class GpuGroupDot(GpuOp):
     def __init__(self, n_groups):
         self.n_groups = n_groups
@@ -1049,5 +1057,4 @@ class GpuGroupDotGrad(GpuOp):
       %(fail)s;
         }
         """ % locals()
-
 
