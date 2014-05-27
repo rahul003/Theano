@@ -18,9 +18,9 @@ printtypes(argx)
 cls = array_clusters[T.cast(argx, 'int32')]
 
 #T.addbroadcast(cls, 1).dimshuffle(0).astype('uint32'))
-out = OneHotFormatter(3).theano_expr(cls.astype('uint32')).T
+out = OneHotFormatter(3).theano_expr(cls.astype('uint32'))
 #printtypes(cls)
-f = theano.function([Y],cls)
+f = theano.function([Y],out)
 print f(Yes)
 print type(f(Yes))
 print f(Yes).shape
