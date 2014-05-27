@@ -2005,14 +2005,22 @@ class GroupDot(theano.gof.Op):
 
     def make_thunk(self, node, storage_map, compute_map, no_recycling):
         shared = theano.tensor._shared
-
         self.W = shared(numpy.zeros((2, 2), dtype=node.inputs[1].dtype))
+
         self.b = shared(numpy.zeros((2,), dtype=node.inputs[2].dtype))
         self.h = shared(numpy.zeros((2, 2), dtype=node.inputs[0].dtype))
         self.out = shared(numpy.zeros((2, 2), dtype=node.outputs[0].dtype))
         out = theano.tensor.dot(self.h, self.W) + self.b
-        # print self.out.type
-        # print out.type
+        print self.out.type
+        print out.type
+        
+        print self.W.type
+        #print gW.type
+        print self.b.type
+        #print gb.type
+        print self.h.type
+        #print gh.type
+        
         updates = [(self.out, out)]
         self.step = theano.function([], [], name='GroupDotStep',
                                     updates=updates)
@@ -2088,21 +2096,21 @@ class GroupDotGrad(theano.gof.Op):
                                               dtype=node.inputs[4].dtype))
         self.gW = shared(numpy.zeros((2, 2), dtype=node.outputs[1].dtype))
         self.gh = shared(numpy.zeros((2, 2), dtype=node.outputs[1].dtype))
-        self.gb = shared(numpy.zeros((2,), dtype=node.outputs[2].dtype))
+        #self.gb = shared(numpy.zeros((2,), dtype=node.outputs[2].dtype))
 
         gW = theano.tensor.dot(self.h.T, self.grad_on_out)
         gh = theano.tensor.dot(self.grad_on_out, self.W.T)
-        gb = self.grad_on_out.sum(0)
+        #gb = self.grad_on_out.sum(0)
 
-        # print self.gW.type
-        # print gW.type
+        print self.gW.type
+        print gW.type
         # print self.gb.type
         # print gb.type
-        # print self.gh.type
-        # print gh.type
+        print self.gh.type
+        print gh.type
         
-        
-        updates = [(self.gW, gW), (self.gb, gb), (self.gh, gh)]
+        # (self.gb, gb),
+        updates = [(self.gW, gW), (self.gh, gh)]
         self.step = theano.function([], [], updates=updates,
                                     name='GroupDotGradStep')
 

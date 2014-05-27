@@ -881,13 +881,18 @@ class GpuGroupDotGrad(GpuOp):
         self.W = shared(numpy.zeros((2, 3), dtype=node.inputs[1].dtype))
         self.h = shared(numpy.zeros((2,), dtype=node.inputs[0].dtype))
         self.grad_on_out = shared(numpy.zeros((3,),
-                                              dtype=node.inputs[3].dtype))
+                                              dtype=node.inputs[4].dtype))
         self.gW = shared(numpy.zeros((2, 3), dtype=node.outputs[1].dtype))
         self.gh = shared(numpy.zeros((2,), dtype=node.outputs[0].dtype))
 
         gW = tensor.outer(self.h, self.grad_on_out)
         gh = tensor.dot(self.grad_on_out, self.W.T)
 
+        print self.gW.type
+        print gW.type
+        print self.gh.type
+        print gh.type
+        
         updates = [(self.gW, gW), (self.gh, gh)]
         self.step = theano.function([], [], updates=updates,
                                     name='GpuGroupDotGradStep')
