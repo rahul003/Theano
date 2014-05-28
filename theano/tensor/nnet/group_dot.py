@@ -38,7 +38,15 @@ class GroupDot(theano.gof.Op):
         self.b = shared(numpy.zeros((2,), dtype=node.inputs[2].dtype))
         self.h = shared(numpy.zeros((2, 2), dtype=node.inputs[0].dtype))
         self.out = shared(numpy.zeros((2, 2), dtype=node.outputs[0].dtype))
+        print self.W.type
+        print self.b.type
+        print self.h.type
+        # print self.out.type
+        print self.out.type
+
+
         out = theano.tensor.dot(self.h, self.W) + self.b
+        print out.type
         updates = [(self.out, out)]
         self.step = theano.function([], [], name='GroupDotStep',
                                     updates=updates)
@@ -157,3 +165,4 @@ class GroupDotGrad(theano.gof.Op):
                 _outs[0][0][mask] = gh
                 _outs[1][0][pos] += gW
                 _outs[2][0][pos] += gb
+        print _outs
