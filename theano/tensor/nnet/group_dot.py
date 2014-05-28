@@ -9,7 +9,6 @@ class GroupDot(theano.gof.Op):
         that Tomas proposed to speed up the output layer (which contains
         many softmax units)
         """
-        print 'initializing'
         self.n_groups = n_groups
 
     def __eq__(self, other):
@@ -111,7 +110,7 @@ class GroupDotGrad(theano.gof.Op):
         self.W = shared(numpy.zeros((2, 2), dtype=node.inputs[1].dtype))
         self.h = shared(numpy.zeros((2, 2), dtype=node.inputs[0].dtype))
         self.grad_on_out = shared(numpy.zeros((2, 2),
-                                              dtype=node.inputs[3].dtype))
+                                              dtype=node.inputs[4].dtype))
         self.gW = shared(numpy.zeros((2, 2), dtype=node.outputs[1].dtype))
         self.gh = shared(numpy.zeros((2, 2), dtype=node.outputs[1].dtype))
         self.gb = shared(numpy.zeros((2,), dtype=node.outputs[2].dtype))
@@ -119,17 +118,8 @@ class GroupDotGrad(theano.gof.Op):
         gW = theano.tensor.dot(self.h.T, self.grad_on_out)
         gh = theano.tensor.dot(self.grad_on_out, self.W.T)
         gb = self.grad_on_out.sum(0)
-
-        print type(self.gW)
-        print type(gW)
-        print type(self.gb)
-        print type(gb)
-        print type(self.gh)
-        print type(gh)
-        
-        
-
-        updates = [(self.gW, gW), (self.gb, gb), (self.gh, gh)]
+        # 
+        updates = [(self.gW, gW),(self.gb, gb), (self.gh, gh)]
         self.step = theano.function([], [], updates=updates,
                                     name='GroupDotGradStep')
 

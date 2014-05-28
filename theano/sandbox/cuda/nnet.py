@@ -887,12 +887,6 @@ class GpuGroupDotGrad(GpuOp):
 
         gW = tensor.outer(self.h, self.grad_on_out)
         gh = tensor.dot(self.grad_on_out, self.W.T)
-
-        print self.gW.type
-        print gW.type
-        print self.gh.type
-        print gh.type
-        
         updates = [(self.gW, gW), (self.gh, gh)]
         self.step = theano.function([], [], updates=updates,
                                     name='GpuGroupDotGradStep')

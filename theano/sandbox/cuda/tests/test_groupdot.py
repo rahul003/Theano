@@ -28,15 +28,18 @@ def test_groupdot():
         z = T.nnet.GroupDot(n_clust)(x, np.random.rand(n_clust,n_hid,n_classes).astype('float32'),
                                     np.random.rand(n_clust, n_classes).astype('float32'),
                                     np.random.randint(0, n_clust, size=(n_batch,)))
-        f = theano.function([x], z, mode=mode_without_gpu)
+        #f = theano.function([x], z, mode=mode_without_gpu)
         f_gpu = theano.function([x], z, mode=mode_with_gpu)                              
     
-        out = f(data)
+        #out = f(data)
         #print out
         gout = f_gpu(data)
         #print gout
         #assert numpy.allclose(out, gout), numpy.absolute(out - gout)
 
     #cmp(100,256,10000,51)
-    run(100,256,10000,51)
-    #cmp(10,111,500,35)
+    #run(100,256,10000,51)
+    run(100,256,10000,100)
+    # run(10,111,500,35)
+    # run(10,111,500,35)
+    # run(10,111,500,35)
