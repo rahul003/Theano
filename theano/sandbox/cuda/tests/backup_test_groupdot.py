@@ -53,6 +53,19 @@ def test_groupdot():
     # run(10,111,500,35)
     # run(10,111,500,35)
 
+    #x2 = numpy.arange(m_batch * m_hid, dtype='float32').reshape(m_batch, m_hid)
+    #w2 = np.random.rand(m_clust,m_hid,m_classes).astype('float32')
+    #b2 = np.random.rand(m_clust, m_classes).astype('float32')
+    #c2 = np.random.randint(0, m_clust, size=(m_batch,)).astype('int32')
+
+    # print 'x'
+    # print x[0,:]
+    # print 'w'
+    # print w[c[0],:,:]
+    # print 'b'
+    # print b
+    # print 'c'
+    # print c[0]
 
 
 

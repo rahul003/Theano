@@ -117,8 +117,7 @@ class GroupDotGrad(theano.gof.Op):
 
         self.W = shared(numpy.zeros((2, 2), dtype=node.inputs[1].dtype))
         self.h = shared(numpy.zeros((2, 2), dtype=node.inputs[0].dtype))
-        self.grad_on_out = shared(numpy.zeros((2, 2),
-                                              dtype=node.inputs[4].dtype))
+        self.grad_on_out = shared(numpy.zeros((2, 2),dtype=node.inputs[4].dtype))
         self.gW = shared(numpy.zeros((2, 2), dtype=node.outputs[1].dtype))
         self.gh = shared(numpy.zeros((2, 2), dtype=node.outputs[1].dtype))
         self.gb = shared(numpy.zeros((2,), dtype=node.outputs[2].dtype))
@@ -165,4 +164,3 @@ class GroupDotGrad(theano.gof.Op):
                 _outs[0][0][mask] = gh
                 _outs[1][0][pos] += gW
                 _outs[2][0][pos] += gb
-        print _outs
