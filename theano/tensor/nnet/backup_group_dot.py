@@ -9,7 +9,6 @@ class GroupDot(theano.gof.Op):
         that Tomas proposed to speed up the output layer (which contains
         many softmax units)
         """
-        print 'initializing'
         self.n_groups = n_groups
 
     def __eq__(self, other):
@@ -40,8 +39,6 @@ class GroupDot(theano.gof.Op):
         self.h = shared(numpy.zeros((2, 2), dtype=node.inputs[0].dtype))
         self.out = shared(numpy.zeros((2, 2), dtype=node.outputs[0].dtype))
         out = theano.tensor.dot(self.h, self.W) + self.b
-        # print self.out.type
-        # print out.type
         updates = [(self.out, out)]
         self.step = theano.function([], [], name='GroupDotStep',
                                     updates=updates)
@@ -112,7 +109,6 @@ class GroupDotGrad(theano.gof.Op):
 
         self.W = shared(numpy.zeros((2, 2), dtype=node.inputs[1].dtype))
         self.h = shared(numpy.zeros((2, 2), dtype=node.inputs[0].dtype))
-        #self.b = shared(numpy.zeros((2,), dtype=node.inputs[2].dtype))
         self.grad_on_out = shared(numpy.zeros((2, 2),
                                               dtype=node.inputs[4].dtype))
         self.gW = shared(numpy.zeros((2, 2), dtype=node.outputs[1].dtype))
@@ -122,16 +118,8 @@ class GroupDotGrad(theano.gof.Op):
         gW = theano.tensor.dot(self.h.T, self.grad_on_out)
         gh = theano.tensor.dot(self.grad_on_out, self.W.T)
         gb = self.grad_on_out.sum(0)
-
-        # print self.gW.type
-        # print gW.type
-        # print self.gb.type
-        # print gb.type
-        # print self.gh.type
-        # print gh.type
-        
-        
-        updates = [(self.gW, gW), (self.gb, gb), (self.gh, gh)]
+        # 
+        updates = [(self.gW, gW),(self.gb, gb), (self.gh, gh)]
         self.step = theano.function([], [], updates=updates,
                                     name='GroupDotGradStep')
 
@@ -169,5 +157,3 @@ class GroupDotGrad(theano.gof.Op):
                 _outs[0][0][mask] = gh
                 _outs[1][0][pos] += gW
                 _outs[2][0][pos] += gb
-
-
