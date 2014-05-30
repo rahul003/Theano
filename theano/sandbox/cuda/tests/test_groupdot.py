@@ -70,27 +70,24 @@ def test_verify_groupdotgrad():
     #z = T.nnet.GroupDotGrad(n_clust)(x,w,b,c,h)
     #func = theano.function([x,w,b,c,h], z, mode=mode_without_gpu, name='cpu')
     #f_gpu = theano.function([x,w,b,c,h], z, mode=mode_with_gpu, name='gpu')             
-    n_batch=5
-    n_hid=30
+    n_batch=50
+    n_hid=32
     n_classes=70
-    x = numpy.arange(n_batch * n_hid, dtype='float32').reshape(n_batch, n_hid)
-    w = np.random.rand(n_clust,n_hid,n_classes).astype('float32')
-    b = np.random.rand(n_clust, n_classes).astype('float32')
-    c = np.random.randint(0, n_clust, size=(n_batch,)).astype('int32')
-    h = np.random.rand(n_batch,n_classes).astype('float32')
-    
-    
     #out=func(x,w,b,c,h)
     #gout=f_gpu(x,w,b,c,h)
     #print numpy.subtract(out,gout)
     #print numpy.testing.assert_array_almost_equal(out,gout)
     #print numpy.testing.assert_array_almost_equal(out,gout,decimal=5)
-    
+    c = np.random.randint(0, n_clust, size=(n_batch,)).astype('int32')
     def op_with_fixed_c(x,w,b):
         return T.nnet.GroupDot(n_clust)(x, w, b, c)
 
     rng = numpy.random.RandomState(42)
-
+    x = numpy.arange(n_batch * n_hid, dtype='float32').reshape(n_batch, n_hid)
+    w = np.random.rand(n_clust,n_hid,n_classes).astype('float32')
+    b = np.random.rand(n_clust, n_classes).astype('float32')
+    
+    h = np.random.rand(n_batch,n_classes).astype('float32')
     T.verify_grad(op_with_fixed_c, [x,w,b], rng=rng)
 
    
