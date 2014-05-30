@@ -91,7 +91,7 @@ def test_verify_groupdotgrad():
 
         rng = numpy.random.RandomState(42)
 
-        T.verify_grad(op_with_fixed_c, [x,w,b], rng=rng)
+        T.verify_grad(op_with_fixed_c, [x,w,b], rng=rng, mode=mode_without_gpu)
 
 
     cmp(2,5,10,15)
