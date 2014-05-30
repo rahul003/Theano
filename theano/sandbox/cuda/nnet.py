@@ -906,8 +906,8 @@ class GpuGroupDotGrad(GpuOp):
 
         if not (_outs[2][0] and _outs[2][0].shape == biases.shape):
             _outs[2][0] = CudaNdarray.zeros(biases.shape)
-
-        for pos in xrange(self.n_groups):
+        
+        for pos in xrange(self.n_groups):         
             mask = groups == pos
             if mask.sum() != 0:
                 self.W.set_value(matrix[pos], borrow=True)

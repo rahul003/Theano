@@ -67,13 +67,13 @@ def test_verify_groupdotgrad():
     h = T.fmatrix('h')
     c = T.vector('c',dtype='int32')
     n_clust=2
-    #z = T.nnet.GroupDotGrad(n_clust)(x,w,b,c,h)
-    #func = theano.function([x,w,b,c,h], z, mode=mode_without_gpu, name='cpu')
+    z = T.nnet.GroupDotGrad(n_clust)(x,w,b,c,h)
+    func = theano.function([x,w,b,c,h], z, mode=mode_without_gpu, name='cpu')
     #f_gpu = theano.function([x,w,b,c,h], z, mode=mode_with_gpu, name='gpu')             
-    n_batch=50
-    n_hid=32
-    n_classes=70
-    #out=func(x,w,b,c,h)
+    n_batch=5
+    n_hid=10
+    n_classes=15
+    
     #gout=f_gpu(x,w,b,c,h)
     #print numpy.subtract(out,gout)
     #print numpy.testing.assert_array_almost_equal(out,gout)
@@ -88,6 +88,8 @@ def test_verify_groupdotgrad():
     b = np.random.rand(n_clust, n_classes).astype('float32')
     
     h = np.random.rand(n_batch,n_classes).astype('float32')
+    
+    out=func(x,w,b,c,h)
     T.verify_grad(op_with_fixed_c, [x,w,b], rng=rng)
 
    
