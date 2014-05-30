@@ -1,7 +1,6 @@
 from nose.plugins.skip import SkipTest
-import numpy 
-import numpy as np
 
+import numpy 
 import theano
 from theano.gof.python25 import any
 import theano.tensor as T
