@@ -1666,9 +1666,6 @@ def jacobian(expression, wrt, consider_constant=None,
 
     if expression.ndim == 0:
         # expression is just a scalar, use grad
-# <<<<<<< HEAD
-#         return format_as(using_list, using_tuple, grad(expression, wrt))
-# =======
         return format_as(using_list, using_tuple,
                          grad(expression,
                               wrt,
