@@ -33,13 +33,8 @@ def test_groupdot():
     f = theano.function([x,w,b,c], z, mode=mode_without_gpu, name='cpu')
     f_gpu = theano.function([x,w,b,c], z, mode=mode_with_gpu, name='gpu')                              
     
-
-    n_batch=50
-    n_hid=300
-    n_clust=20
-    n_classes=7000
     
-    def cmp(n_batch, n_hid,    n_clust,n_classes):
+    def cmp(n_batch, n_hid,n_clust,n_classes):
         x = numpy.arange(n_batch * n_hid, dtype='float32').reshape(n_batch, n_hid)
         w = np.random.rand(n_clust,n_hid,n_classes).astype('float32')
         b = np.random.rand(n_clust, n_classes).astype('float32')
