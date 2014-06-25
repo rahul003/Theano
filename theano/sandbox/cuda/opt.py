@@ -115,7 +115,7 @@ class InputToGpuOptimizer(Optimizer):
 
                 if new_input.type == input.type:
                     fgraph.replace_validate(input, new_input,
-                                         "InputToGpuOptimizer")
+                                            "InputToGpuOptimizer")
             except TypeError:
                 #as we currently only support float32, this can fail.
                 #Using try except make that we won't need
@@ -684,6 +684,24 @@ def local_gpu_careduce(node):
     return False
 
 
+@register_opt("low_memory")
+@local_optimizer([GpuCAReduce])
+def local_gpu_elemwise_careduce(node):
+    if (isinstance(node.op, GpuCAReduce) and
+        node.op.pre_scalar_op is None and
+        node.inputs[0].owner and
+        isinstance(node.inputs[0].owner.op, GpuElemwise) and
+        # The Op support all scalar with 1 inputs.  We don't
+        # automatically add more case, as some like trigonometic
+        # operation with some reduction pattern will probably result
+        # to slow down.
+        isinstance(node.inputs[0].owner.op.scalar_op, scal.basic.Sqr)
+        ):
+        op = node.op
+        inp = node.inputs[0].owner.inputs[0]
+        return [GpuCAReduce(op.reduce_mask, op.scalar_op, scal.basic.sqr)(inp)]
+
+
 @register_opt()
 @local_optimizer([gpu_from_host, tensor.Reshape])
 def local_gpu_reshape(node):
@@ -1118,8 +1136,47 @@ def local_gpu_conv(node):
             # differently then the gpu ConvOp
             return [out]
 
-import theano.tensor.signal.downsample as downsample
 
+def _gpu_conv_to_fftconv(node):
+    # shared helper function for local_conv_fft_valid and local_conv_fft_full.
+    # we import conv2d_fft locally to avoid pycuda warnings
+    from theano.sandbox.cuda.fftconv import conv2d_fft
+    kwargs = {'border_mode': node.op.border_mode}
+    if (node.op.imshp is not None and
+        node.op.imshp[-1] is not None and
+        node.op.imshp[-1] % 2 == 1):
+        kwargs['pad_last_dim'] = True
+    # TODO: If the user supplied the full nonsymbolic image_shape and
+    # filter_shape in conv2d(), we could pass it on to conv2d_fft(). However,
+    # information on batch size and channel counts is currently discarded
+    # when a ConvOp is replaced by a GpuConv, so this would need more changes.
+    #if (node.op.imshp is not None) and (None not in node.op.imshp):
+    #    kwargs['image_shape'] = (bsize, inchannels) + node.op.imshp
+    #if (node.op.kshp is not None) and (None not in node.op.kshp):
+    #    kwargs['filter_shape'] = (outchannels, inchannels) + node.op.kshp
+    return conv2d_fft(node.inputs[0], node.inputs[1], **kwargs)
+
+
+@local_optimizer([GpuConv])
+def local_conv_fft_valid(node):
+    if (isinstance(node.op, GpuConv) and
+        node.op.border_mode == 'valid' and
+        node.op.subsample == (1, 1)):
+        return [_gpu_conv_to_fftconv(node)]
+
+
+@local_optimizer([GpuConv])
+def local_conv_fft_full(node):
+    if (isinstance(node.op, GpuConv) and
+        node.op.border_mode == 'full' and
+        node.op.subsample == (1, 1)):
+        return [_gpu_conv_to_fftconv(node)]
+
+gpu_optimizer.register("conv_fft_valid", local_conv_fft_valid)
+gpu_optimizer.register("conv_fft_full", local_conv_fft_full)
+
+
+import theano.tensor.signal.downsample as downsample
 
 @register_opt()
 @local_optimizer([downsample.DownsampleFactorMax])

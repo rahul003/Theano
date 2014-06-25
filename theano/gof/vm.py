@@ -19,17 +19,18 @@ import theano.gof.cmodule
 logger = logging.getLogger(__name__)
 
 AddConfigVar('profile',
-        "If VM should collect profile information",
-        BoolParam(False),
-        in_c_key=False)
+             "If VM should collect profile information",
+             BoolParam(False),
+             in_c_key=False)
 AddConfigVar('profile_optimizer',
-        "If VM should collect optimizer profile information",
-        BoolParam(False),
-        in_c_key=False)
+             "If VM should collect optimizer profile information",
+             BoolParam(False),
+             in_c_key=False)
 AddConfigVar('profile_memory',
-        "If VM should collect memory profile information and print it",
-        BoolParam(False),
-        in_c_key=False)
+             "If VM should collect memory profile information and print it",
+             BoolParam(False),
+             in_c_key=False)
+
 
 def filter_vm_lazy(val):
     if val == 'False' or val is False:
@@ -40,7 +41,7 @@ def filter_vm_lazy(val):
         return None
     else:
         raise ValueError('Valid values for an vm.lazy parameter '
-                        'should be None, False or True, not `%s`.' % val)
+                         'should be None, False or True, not `%s`.' % val)
 
 AddConfigVar('vm.lazy',
              "Useful only for the vm linkers. When lazy is None,"
@@ -140,6 +141,12 @@ class VM(object):
         if hasattr(self, 'variable_shape'):
             profile.variable_shape = self.variable_shape.copy()
             profile.variable_strides = self.variable_strides.copy()
+
+        if hasattr(self, 'node_executed_order'):
+            profile.node_executed_order = self.node_executed_order[:]
+
+        if hasattr(self, 'node_cleared_order'):
+            profile.node_cleared_order = self.node_cleared_order[:]
 
         # clear the timer info out of the buffers
         for i in xrange(len(self.call_times)):
@@ -298,6 +305,7 @@ class Stack(VM):
         idx = self.node_idx[node]
         t0 = time.time()
         rval = self.thunks[idx]()
+        self.node_executed_order.append(node)
 
         # Some thunks on some computers run faster than the granularity
         # of the time.time clock.
@@ -306,11 +314,11 @@ class Stack(VM):
         dt = max(time.time() - t0, 1e-10)
         if self.callback is not None:
             self.callback(
-                    node=node,
-                    thunk=self.thunks[idx],
-                    storage_map=self.storage_map,
-                    compute_map=self.compute_map,
-                    )
+                node=node,
+                thunk=self.thunks[idx],
+                storage_map=self.storage_map,
+                compute_map=self.compute_map,
+            )
         return rval, dt
 
     def __call__(self):
@@ -318,6 +326,9 @@ class Stack(VM):
         compute_map = self.compute_map
         thunks = self.thunks
         dependencies = self.dependencies
+        self.node_executed_order = []
+        self.node_cleared_order = []
+
         for k in self.storage_map:
             compute_map[k][0] = (k.owner is None)
 
@@ -404,6 +415,10 @@ class Stack(VM):
                                       self.thunks[self.node_idx[current_apply]])
                     for o in current_apply.outputs:
                         compute_map[o][0] = 1
+
+                    input_index = []
+                    # A list store the index of inputs variables
+
                     if self.allow_gc:
                         for i in current_apply.inputs:
                             # Garbage Collection -> check if anybody else uses
@@ -414,6 +429,8 @@ class Stack(VM):
                                 if all(compute_map[v][0]
                                         for v in dependencies[i]):
                                     storage_map[i][0] = None
+                                    input_index.append(current_apply.inputs.index(i))
+
                                     #DO NOT set compute_map to 0
 
                                     #If values become False and the
@@ -435,12 +452,15 @@ class Stack(VM):
         #The stack level is not good when inside a Scan.
         stacklevel=3
                                         )
+                    self.node_cleared_order.append(input_index)
+
                 elif not computed_ins:
                     # -- Non-lazy case, need inputs
                     apply_stack.append(current_apply)
                     apply_stack.extend(inp.owner
                             for inp in current_deps
                             if inp.owner)
+
 
             elif not computed_outs:
                 #
@@ -488,6 +508,8 @@ class Stack(VM):
                                 st = 'c'
                             self.variable_strides[var] = st
 
+                    input_index = []
+
                     if self.allow_gc:
                         for i in current_apply.inputs:
                             if (dependencies[i] and i.owner and
@@ -499,17 +521,29 @@ class Stack(VM):
                                         break
                                 if empty_storage_map:
                                     storage_map[i][0] = None
+                                    input_index.append(current_apply.inputs.index(i)) 
                                     #See the not lazy gc code for explanations
                                     #of compute_map change
                                     compute_map[i][0] = 2
 
+                    self.node_cleared_order.append(input_index)
+
         # Hacky coarse gc final pass
         # This is required until we have a proper gc algorithm for graphs with
         # lazy evaluation. See discussion on theano-dev June 19 2012.
+        final_index = []
+
         if self.allow_gc:
             for v in storage_map:
                 if v.owner and not v in self.outputs:
-                    storage_map[v][0] = None
+                    if compute_map[v][0] == 2:
+                        continue
+                    else:
+                        storage_map[v][0] = None
+                        final_index.append(v)
+                        compute_map[v][0] = 2
+
+        self.node_cleared_order.append(final_index)
 
 
 try:

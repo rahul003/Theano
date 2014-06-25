@@ -2425,7 +2425,7 @@ class Alloc(gof.Op):
             {
                 Py_XDECREF(%(zz)s);
                 %(zz)s = (PyArrayObject*) PyArray_SimpleNew(%(ndim)s,
-                    shape, type_num_%(vv)s);
+                    shape, PyArray_TYPE((PyArrayObject*) py_%(vv)s));
                 if (!%(zz)s)
                 {
                     PyErr_SetString(PyExc_MemoryError, "alloc failed");
@@ -3150,8 +3150,9 @@ class Split(Op):
         if numpy.sum(splits) != len_along_axis:
             raise ValueError('The splits sum to %s, expected %s' %
                              (numpy.sum(splits), len_along_axis))
-        if not python_all(splits):
-            raise ValueError('Cannot have a split of zero.')
+        if python_any([nb < 0 for nb in splits]):
+            raise ValueError('Split: you try to make an ndarray with'
+                             'negative number of elements.')
 
         # Checking is done, let's roll the splitting algorithm!
         # Basically we step along the given axis of x, extracting
@@ -3260,6 +3261,8 @@ class Join(Op):
         join(2, x, y, z)    # WRONG: the axis has to be an index into the shape
         join(0, x, u)       # WRONG: joined tensors must have the same rank
     """
+    check_input = False
+
     def __eq__(self, other):
         return type(self) == type(other)
 
@@ -3371,14 +3374,14 @@ class Join(Op):
                 dtype=node.outputs[0].type.dtype)
 
     def c_code_cache_version(self):
-        return (1,)
+        return (2,)
 
     def c_code(self, node, name, inputs, outputs, sub):
         axis, tensors = inputs[0], inputs[1:]
         l = len(tensors)
         out, = outputs
         fail = sub['fail']
-
+        adtype = node.inputs[0].type.dtype_specs()[1]
         code = """
         PyObject* list = PyList_New(%(l)s);
         """ % locals()
@@ -3391,7 +3394,7 @@ class Join(Op):
         //PyObject* PyArray_Concatenate(PyObject* obj, int axis)
         Py_XDECREF(%(out)s);
         %(out)s = (PyArrayObject *)PyArray_Concatenate(list,
-                      ((dtype_%(axis)s *)PyArray_DATA(%(axis)s))[0]);
+                      ((%(adtype)s *)PyArray_DATA(%(axis)s))[0]);
 
         Py_DECREF(list);
         if(!%(out)s){
@@ -3684,6 +3687,8 @@ class Reshape(Op):
     known at graph build time."""
     view_map = {0: [0]}  # output 0 is potentially aliased to inputs [0]
 
+    check_input = False
+
     def __init__(self, ndim, name=None):
         self.ndim = ndim
         self.name = name
@@ -3813,13 +3818,14 @@ class Reshape(Op):
             return [tuple(oshape)]
 
     def c_code_cache_version(self):
-        return (5,)
+        return (6,)
 
     def c_code(self, node, name, inputs, outputs, sub):
         if isinstance(node.inputs[0], TensorVariable):
             x, shp = inputs
             z, = outputs
             new_ndim = self.ndim
+            sdtype = node.inputs[1].type.dtype_specs()[1]
             fail = sub['fail']
             return """
             assert (PyArray_NDIM(%(shp)s) == 1);
@@ -3833,7 +3839,7 @@ class Reshape(Op):
                 // -- int* dtype. The compiler will explicitly upcast it, but
                 // -- will err if this will downcast. This could happen if the
                 // -- user pass an int64 dtype, but npy_intp endup being int32.
-                new_dims[ii] = ((dtype_%(shp)s*)(
+                new_dims[ii] = ((%(sdtype)s*)(
                         PyArray_BYTES(%(shp)s) +
                         ii * PyArray_STRIDES(%(shp)s)[0]))[0];
             }
@@ -5021,3 +5027,16 @@ def ptp(a, axis=None):
     out = max(a, axis) - min(a, axis)
 
     return out
+
+
+def power(x, y):
+    return x**y
+
+
+def swapaxes(y,axis1,axis2):
+	"swap axes of inputted tensor"
+	y = as_tensor_variable(y)
+	ndim = y.ndim
+	li = range(0, ndim)
+	li[axis1], li[axis2] = li[axis2], li[axis1]
+	return y.dimshuffle(li)
