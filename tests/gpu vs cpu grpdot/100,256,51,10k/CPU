@@ -1,0 +1,108 @@
+CPU
+.
+----------------------------------------------------------------------
+Ran 1 test in 2.851s
+
+OK
+Function profiling
+==================
+  Message: my function
+  Time in 1 calls to Function.__call__: 8.183789e-02s
+  Time in Function.fn.__call__: 8.176780e-02s (99.914%)
+  Time in thunks: 8.176017e-02s (99.905%)
+  Total compile time: 1.884720e-01s
+    Theano Optimizer time: 1.871610e-02s
+       Theano validate time: 0.000000e+00s
+    Theano Linker time (includes C, CUDA code generation/compiling): 5.813909e-02s
+
+Class
+---
+<% time> <sum %> <apply time> <time per call> <type> <#call> <#apply> <Class name>
+  100.0%   100.0%       0.082s       8.18e-02s     Py        1        1   theano.tensor.nnet.group_dot.GroupDot
+   ... (remaining 0 Classes account for   0.00%(0.00s) of the runtime)
+
+Ops
+---
+<% time> <sum %> <apply time> <time per call> <type> <#call> <#apply> <Op name>
+  100.0%   100.0%       0.082s       8.18e-02s     Py       1        1   <theano.tensor.nnet.group_dot.GroupDot object at 0x3829210>
+   ... (remaining 0 Ops account for   0.00%(0.00s) of the runtime)
+
+Apply
+------
+<% time> <sum %> <apply time> <time per call> <#call> <id> <Apply name>
+  100.0%   100.0%       0.082s       8.18e-02s      1     0   <theano.tensor.nnet.group_dot.GroupDot object at 0x3829210>(x, w, b, c)
+   ... (remaining 0 Apply instances account for 0.00%(0.00s) of the runtime)
+
+Function profiling
+==================
+  Message: GroupDotStep
+  Time in 49 calls to Function.__call__: 6.185555e-02s
+  Time in Function.fn.__call__: 5.997610e-02s (96.962%)
+  Time in thunks: 5.925298e-02s (95.792%)
+  Total compile time: 4.702902e-02s
+    Theano Optimizer time: 1.650906e-02s
+       Theano validate time: 3.390312e-04s
+    Theano Linker time (includes C, CUDA code generation/compiling): 2.531791e-02s
+
+Class
+---
+<% time> <sum %> <apply time> <time per call> <type> <#call> <#apply> <Class name>
+  97.2%    97.2%       0.058s       1.18e-03s     C        49        1   theano.tensor.blas.Dot22
+   2.4%    99.6%       0.001s       2.84e-05s     C        49        1   theano.tensor.elemwise.Elemwise
+   0.4%   100.0%       0.000s       5.36e-06s     C        49        1   theano.tensor.elemwise.DimShuffle
+   ... (remaining 0 Classes account for   0.00%(0.00s) of the runtime)
+
+Ops
+---
+<% time> <sum %> <apply time> <time per call> <type> <#call> <#apply> <Op name>
+  97.2%    97.2%       0.058s       1.18e-03s     C       49        1   Dot22
+   2.4%    99.6%       0.001s       2.84e-05s     C       49        1   Elemwise{Add}[(0, 0)]
+   0.4%   100.0%       0.000s       5.36e-06s     C       49        1   InplaceDimShuffle{x,0}
+   ... (remaining 0 Ops account for   0.00%(0.00s) of the runtime)
+
+Apply
+------
+<% time> <sum %> <apply time> <time per call> <#call> <id> <Apply name>
+  97.2%    97.2%       0.058s       1.18e-03s     49     1   Dot22(<TensorType(float32, matrix)>, <TensorType(float32, matrix)>)
+   2.4%    99.6%       0.001s       2.84e-05s     49     2   Elemwise{Add}[(0, 0)](Dot22.0, InplaceDimShuffle{x,0}.0)
+   0.4%   100.0%       0.000s       5.36e-06s     49     0   InplaceDimShuffle{x,0}(<TensorType(float32, vector)>)
+   ... (remaining 0 Apply instances account for 0.00%(0.00s) of the runtime)
+
+Function profiling
+==================
+  Message: Sum of all printed profiles at exit excluding Scan op profile.
+  Time in 50 calls to Function.__call__: 1.436934e-01s
+  Time in Function.fn.__call__: 1.417439e-01s (98.643%)
+  Time in thunks: 1.410131e-01s (98.135%)
+  Total compile time: 2.355011e-01s
+    Theano Optimizer time: 3.522515e-02s
+       Theano validate time: 3.390312e-04s
+    Theano Linker time (includes C, CUDA code generation/compiling): 8.345699e-02s
+
+Class
+---
+<% time> <sum %> <apply time> <time per call> <type> <#call> <#apply> <Class name>
+  58.0%    58.0%       0.082s       8.18e-02s     Py        1        1   theano.tensor.nnet.group_dot.GroupDot
+  40.8%    98.8%       0.058s       1.18e-03s     C        49        1   theano.tensor.blas.Dot22
+   1.0%    99.8%       0.001s       2.84e-05s     C        49        1   theano.tensor.elemwise.Elemwise
+   0.2%   100.0%       0.000s       5.36e-06s     C        49        1   theano.tensor.elemwise.DimShuffle
+   ... (remaining 0 Classes account for   0.00%(0.00s) of the runtime)
+
+Ops
+---
+<% time> <sum %> <apply time> <time per call> <type> <#call> <#apply> <Op name>
+  58.0%    58.0%       0.082s       8.18e-02s     Py       1        1   <theano.tensor.nnet.group_dot.GroupDot object at 0x3829210>
+  40.8%    98.8%       0.058s       1.18e-03s     C       49        1   Dot22
+   1.0%    99.8%       0.001s       2.84e-05s     C       49        1   Elemwise{Add}[(0, 0)]
+   0.2%   100.0%       0.000s       5.36e-06s     C       49        1   InplaceDimShuffle{x,0}
+   ... (remaining 0 Ops account for   0.00%(0.00s) of the runtime)
+
+Apply
+------
+<% time> <sum %> <apply time> <time per call> <#call> <id> <Apply name>
+  58.0%    58.0%       0.082s       8.18e-02s      1     0   <theano.tensor.nnet.group_dot.GroupDot object at 0x3829210>(x, w, b, c)
+  40.8%    98.8%       0.058s       1.18e-03s     49     1   Dot22(<TensorType(float32, matrix)>, <TensorType(float32, matrix)>)
+   1.0%    99.8%       0.001s       2.84e-05s     49     2   Elemwise{Add}[(0, 0)](Dot22.0, InplaceDimShuffle{x,0}.0)
+   0.2%   100.0%       0.000s       5.36e-06s     49     0   InplaceDimShuffle{x,0}(<TensorType(float32, vector)>)
+   ... (remaining 0 Apply instances account for 0.00%(0.00s) of the runtime)
+

@@ -1,5 +1,6 @@
 from nose.plugins.skip import SkipTest
-import numpy
+import numpy 
+import numpy as np
 
 import theano
 from theano.gof.python25 import any
@@ -207,6 +208,46 @@ def test_softmax_with_bias():
     cmp(128, 16 * 1024)
     cmp(128, 64 * 1024)
 
+
+def test_softmax():
+    """
+    This is basic test for GpuSoftmax
+
+    We check that we loop when their is too much block
+    We use slower code when there isn't enough shared memory
+    """
+    x = T.fmatrix('x')
+
+    z = T.nnet.softmax(x)
+    f = theano.function([x], z, mode=mode_without_gpu)
+    f_gpu = theano.function([x], z, mode=mode_with_gpu)
+    assert f.maker.fgraph.toposort()[-1].op == T.nnet.softmax
+    assert isinstance(f_gpu.maker.fgraph.toposort()[-2].op,
+                      cuda.nnet.GpuSoftmax)
+
+    def cmp(n, m):
+        #print "test_softmax",n,m
+        data = numpy.arange(n * m, dtype='float32').reshape(n, m)
+        out = f(data)
+        gout = f_gpu(data)
+        assert numpy.allclose(out, gout), numpy.absolute(out - gout)
+
+    #we need to test n>32*1024 to check that we make the block loop.
+    cmp(2, 5)
+    cmp(2 << 15, 5)
+    cmp(4074, 400)
+    cmp(0, 10)
+    cmp(784, 784)
+    cmp(4, 1000)
+    cmp(4, 1024)
+    cmp(4, 2000)
+    cmp(4, 2024)
+    # The GTX285 don't have enough shared memory.
+    cmp(4, 4074)
+    # The GTX580, 680 and kepler don't have enough shared memory.
+    cmp(2, 10000)
+    cmp(128, 16 * 1024)
+    cmp(128, 64 * 1024)
 
 def test_softmax():
     """
