@@ -35,7 +35,7 @@ from theano.sandbox.cuda.blas import (GpuDownsampleFactorMax,
 from theano.sandbox.cuda.nnet import (
         GpuCrossentropySoftmaxArgmax1HotWithBias,
         GpuCrossentropySoftmax1HotWithBiasDx,
-        GpuSoftmax, GpuSoftmaxWithBias, GpuGroupDot, GpuGroupDotGrad)
+        GpuSoftmax, GpuSoftmaxWithBias)
 from theano.sandbox.cuda.elemwise import SupportCodeError
 from theano.scalar.basic_scipy import Erfinv
 from theano.sandbox.cuda.elemwise import erfinv_gpu
@@ -1676,26 +1676,6 @@ def typeConstructor(broadcastable, dtype):
         return CudaNdarrayType(broadcastable=broadcastable)
     else:
         return tensor.TensorType(broadcastable=broadcastable, dtype=dtype)
-
-@register_opt()
-@local_optimizer([tensor.nnet.GroupDot])
-def gd_to_gpu(node):
-    if (isinstance(node.op, tensor.nnet.GroupDot) and
-        node.inputs[0].dtype == 'float32' and
-        node.inputs[1].dtype == 'float32' and
-        node.inputs[2].dtype == 'float32'):
-        return [host_from_gpu(GpuGroupDot(node.op.n_groups)(*node.inputs))]
-
-@register_opt()
-@local_optimizer([tensor.nnet.GroupDotGrad])
-def ggd_to_gpu(node):
-    if (isinstance(node.op, tensor.nnet.GroupDotGrad) and
-        node.inputs[0].dtype == 'float32' and
-        node.inputs[1].dtype == 'float32' and
-        node.inputs[2].dtype == 'float32' and
-        node.inputs[4].dtype == 'float32'):
-        return map(host_from_gpu,
-                   GpuGroupDotGrad(node.op.n_groups)(*node.inputs))
 
 @register_opt('scan')
 @local_optimizer([gpu_from_host, scan_op.Scan])
